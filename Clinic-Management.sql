@@ -165,7 +165,7 @@ CREATE TABLE medical_history (
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_history_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE
+    CONSTRAINT fk_history_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE 
 );
 
 -- =============================================
@@ -173,6 +173,8 @@ CREATE TABLE medical_history (
 -- =============================================
 
 -- Table for appointment statuses
+-- Defines the various states an appointment can have, such as 
+-- Scheduled, Completed, Cancelled, and No-Show.
 CREATE TABLE appointment_status (
     status_id INT AUTO_INCREMENT PRIMARY KEY,
     status_name VARCHAR(50) NOT NULL UNIQUE,
@@ -191,6 +193,8 @@ INSERT INTO appointment_status (status_name, description) VALUES
 ('Rescheduled', 'Appointment has been rescheduled');
 
 -- Table for appointments
+-- Stores patient appointment details, including date, time, 
+-- assigned doctor, reason for visit, and status.
 CREATE TABLE appointments (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -205,15 +209,17 @@ CREATE TABLE appointments (
     created_by INT NOT NULL,  -- User who created the appointment
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_appointment_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
-    CONSTRAINT fk_appointment_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_appointment_department FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_appointment_status FOREIGN KEY (status_id) REFERENCES appointment_status(status_id) ON DELETE RESTRICT,
-    CONSTRAINT fk_appointment_created_by FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_appointment_time CHECK (end_time > start_time)
+    CONSTRAINT fk_appointment_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE, -- Prevents deletion of a patient if they have scheduled appointments.
+    CONSTRAINT fk_appointment_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE RESTRICT, -- Prevents deletion of a doctor if they have scheduled appointments.
+    CONSTRAINT fk_appointment_department FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE RESTRICT, -- Prevents deletion of a department if there are appointments scheduled in it.
+    CONSTRAINT fk_appointment_status FOREIGN KEY (status_id) REFERENCES appointment_status(status_id) ON DELETE RESTRICT, -- Prevents deletion of a status if it is being used in an appointment.
+    CONSTRAINT fk_appointment_created_by FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE RESTRICT, -- Prevents deletion of a user if they have created appointments.
+    CONSTRAINT chk_appointment_time CHECK (end_time > start_time) -- Ensures that the end time is after the start time
 );
 
 -- Table for doctor schedules
+-- Maintains weekly availability for each doctor, including 
+-- working hours, maximum appointments per day, and break times.
 CREATE TABLE doctor_schedules (
     schedule_id INT AUTO_INCREMENT PRIMARY KEY,
     doctor_id INT NOT NULL,
@@ -233,6 +239,8 @@ CREATE TABLE doctor_schedules (
 );
 
 -- Table for doctor time-off
+-- Logs periods when doctors are unavailable due to vacation, 
+-- conferences, or medical leave.
 CREATE TABLE doctor_time_off (
     time_off_id INT AUTO_INCREMENT PRIMARY KEY,
     doctor_id INT NOT NULL,
@@ -251,6 +259,8 @@ CREATE TABLE doctor_time_off (
 -- =============================================
 
 -- Table for vitals
+-- Stores essential patient vital signs recorded during appointments, 
+-- including temperature, blood pressure, and oxygen saturation levels.
 CREATE TABLE vitals (
     vital_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -274,6 +284,8 @@ CREATE TABLE vitals (
 );
 
 -- Table for medical records
+-- Stores diagnoses, treatment plans, and follow-up information 
+-- for each patient visit.
 CREATE TABLE medical_records (
     record_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -296,6 +308,8 @@ CREATE TABLE medical_records (
 -- =============================================
 
 -- Table for medication categories
+-- Groups medications into relevant classifications, such as antibiotics 
+-- or pain relievers.
 CREATE TABLE medication_categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(100) NOT NULL UNIQUE,
@@ -305,6 +319,8 @@ CREATE TABLE medication_categories (
 );
 
 -- Table for medications/drugs
+-- Stores detailed information about medications, including generic names, 
+-- dosage forms, and prescription requirements.
 CREATE TABLE medications (
     medication_id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT,
@@ -322,6 +338,8 @@ CREATE TABLE medications (
 );
 
 -- Table for prescriptions
+-- Tracks prescribed medications for patients, linking prescriptions 
+-- to medical records and expiry dates.
 CREATE TABLE prescriptions (
     prescription_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -339,7 +357,9 @@ CREATE TABLE prescriptions (
     CONSTRAINT chk_prescription_dates CHECK (expiry_date >= prescribed_date)
 );
 
--- Table for prescription items (medications in a prescription)
+-- Table for prescription items
+-- Lists individual medications within a prescription, 
+-- including dosage, frequency, and duration.
 CREATE TABLE prescription_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     prescription_id INT NOT NULL,
@@ -360,6 +380,8 @@ CREATE TABLE prescription_items (
 -- =============================================
 
 -- Table for lab test categories
+-- Defines categories to organize different types of laboratory tests.
+-- Useful for grouping related tests under specific medical classifications.
 CREATE TABLE lab_test_categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(100) NOT NULL UNIQUE,
@@ -369,6 +391,8 @@ CREATE TABLE lab_test_categories (
 );
 
 -- Table for lab tests
+-- Stores details of individual laboratory tests, including name, pricing, 
+-- normal ranges, and preparation instructions. Helps streamline test management.
 CREATE TABLE lab_tests (
     test_id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT,
@@ -383,6 +407,8 @@ CREATE TABLE lab_tests (
 );
 
 -- Table for lab orders
+-- Tracks laboratory test requests made by doctors for patients. 
+-- Includes details like priority status and appointment linkage to streamline diagnostics.
 CREATE TABLE lab_orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -400,6 +426,8 @@ CREATE TABLE lab_orders (
 );
 
 -- Table for lab order items (tests in an order)
+-- Stores individual tests assigned to each lab order. Ensures all 
+-- requested tests are properly recorded within orders.
 CREATE TABLE lab_order_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -411,6 +439,8 @@ CREATE TABLE lab_order_items (
 );
 
 -- Table for lab results
+-- Maintains laboratory test results with details such as performed date, 
+-- abnormal flag, verification status, and technician information.
 CREATE TABLE lab_results (
     result_id INT AUTO_INCREMENT PRIMARY KEY,
     order_item_id INT NOT NULL,
@@ -433,6 +463,8 @@ CREATE TABLE lab_results (
 -- =============================================
 
 -- Table for service categories
+-- Defines different service categories in the billing system.
+-- Helps classify medical services for easier tracking.
 CREATE TABLE service_categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(100) NOT NULL UNIQUE,
@@ -442,6 +474,8 @@ CREATE TABLE service_categories (
 );
 
 -- Table for services
+-- Stores available medical services, including duration and pricing. 
+-- Linked to service categories to facilitate structured billing.
 CREATE TABLE services (
     service_id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT,
@@ -455,6 +489,8 @@ CREATE TABLE services (
 );
 
 -- Table for invoices
+-- Manages billing records for patients, including discounts, taxes, 
+-- and total payable amounts. Also tracks invoice status and due dates.
 CREATE TABLE invoices (
     invoice_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -478,6 +514,8 @@ CREATE TABLE invoices (
 );
 
 -- Table for invoice items
+-- Stores detailed breakdowns of items in an invoice, including services, 
+-- medications, or tests associated with a specific bill.
 CREATE TABLE invoice_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     invoice_id INT NOT NULL,
@@ -495,6 +533,8 @@ CREATE TABLE invoice_items (
 );
 
 -- Table for payments
+-- Logs patient payments towards invoices, tracking methods 
+-- (e.g., credit card, insurance) and amounts received.
 CREATE TABLE payments (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
     invoice_id INT NOT NULL,
@@ -511,6 +551,8 @@ CREATE TABLE payments (
 );
 
 -- Table for insurance claims
+-- Tracks insurance claims submitted for patient invoices.
+-- Monitors claim status, approval amounts, and rejection reasons.
 CREATE TABLE insurance_claims (
     claim_id INT AUTO_INCREMENT PRIMARY KEY,
     invoice_id INT NOT NULL,
@@ -537,6 +579,8 @@ CREATE TABLE insurance_claims (
 -- =============================================
 
 -- Table for suppliers
+-- Stores supplier details, including contact information and location. 
+-- Useful for tracking vendors that provide inventory items.
 CREATE TABLE suppliers (
     supplier_id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_name VARCHAR(100) NOT NULL,
@@ -553,6 +597,8 @@ CREATE TABLE suppliers (
 );
 
 -- Table for inventory categories
+-- Defines categories for organizing inventory items. 
+-- Each category has a unique name and description for classification.
 CREATE TABLE inventory_categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(100) NOT NULL UNIQUE,
@@ -562,6 +608,8 @@ CREATE TABLE inventory_categories (
 );
 
 -- Table for inventory items
+-- Maintains details of inventory products, including stock levels, unit costs, 
+-- and expiry dates. Ensures stock tracking and inventory management.
 CREATE TABLE inventory_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT,
@@ -581,6 +629,8 @@ CREATE TABLE inventory_items (
 );
 
 -- Table for inventory transactions
+-- Records every transaction affecting inventory, including purchases, 
+-- usage, returns, adjustments, and transfers. Provides accountability for stock movements.
 CREATE TABLE inventory_transactions (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
     item_id INT NOT NULL,
@@ -598,6 +648,8 @@ CREATE TABLE inventory_transactions (
 );
 
 -- Table for purchase orders
+-- Stores purchase order details for acquiring inventory from suppliers. 
+-- Tracks order status, payment details, and expected delivery dates.
 CREATE TABLE purchase_orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_id INT NOT NULL,
@@ -615,6 +667,8 @@ CREATE TABLE purchase_orders (
 );
 
 -- Table for purchase order items
+-- Tracks individual inventory items within purchase orders. 
+-- Ensures quantity, unit price, and total cost calculations remain accurate.
 CREATE TABLE purchase_order_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -635,6 +689,8 @@ CREATE TABLE purchase_order_items (
 -- =============================================
 
 -- Table for system settings
+-- Stores configurable system settings and preferences. 
+-- Allows admins to customize various application parameters.
 CREATE TABLE system_settings (
     setting_id INT AUTO_INCREMENT PRIMARY KEY,
     setting_name VARCHAR(100) NOT NULL UNIQUE,
@@ -647,6 +703,8 @@ CREATE TABLE system_settings (
 );
 
 -- Table for audit logs
+-- Maintains a log of important system changes, including who performed 
+-- the action, old vs. new values, and timestamps for audit tracking.
 CREATE TABLE audit_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -662,6 +720,8 @@ CREATE TABLE audit_logs (
 );
 
 -- Table for notifications
+-- Stores notifications for users, ensuring they receive alerts 
+-- related to appointments, inventory, and other system events.
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -676,6 +736,8 @@ CREATE TABLE notifications (
 );
 
 -- Table for documents
+-- Manages uploaded documents linked to patients, including medical records, 
+-- prescriptions, and reports. Tracks file metadata and ownership.
 CREATE TABLE documents (
     document_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -696,6 +758,8 @@ CREATE TABLE documents (
 -- =============================================
 
 -- View for basic patient information
+-- Provides a structured view of patient details, including demographics, 
+-- insurance information, and registration data.
 CREATE VIEW view_patient_info AS
 SELECT 
     p.patient_id,
@@ -721,6 +785,8 @@ LEFT JOIN
     insurance_providers ins ON p.insurance_provider_id = ins.provider_id;
 
 -- View for doctor information with department and specialties
+-- Displays doctor details along with department assignment and medical specialties. 
+-- Useful for filtering doctors based on expertise.
 CREATE OR REPLACE VIEW view_doctor_info AS
 SELECT 
     d.doctor_id,
@@ -750,7 +816,9 @@ GROUP BY
     d.doctor_id;
 
 -- View for upcoming appointments
-CREATE OR REPLACE VIEW view_upcoming_appointments AS
+-- This view retrieves details of upcoming patient appointments, including patient and doctor information, department, and appointment status.
+-- The query excludes cancelled or completed appointments and orders them chronologically to help efficiently manage scheduled visits.
+-- Joins are used to pull relevant details from multiple related tables.CREATE OR REPLACE VIEW view_upcoming_appointments AS
 SELECT 
     a.appointment_id,
     a.appointment_date,
@@ -780,6 +848,10 @@ ORDER BY
     a.appointment_date, a.start_time;
 
 -- View for invoices with payment status
+-- This view provides a summary of invoices and their payment statuses. 
+-- It calculates the balance remaining, categorizes invoices as Fully Paid, 
+-- Partially Paid, Overdue, or Pending, and includes relevant patient information.
+-- Payments are aggregated per invoice using COALESCE to handle cases with no payments.
 CREATE OR REPLACE VIEW view_invoice_payment_status AS
 SELECT 
     i.invoice_id,
@@ -812,6 +884,10 @@ GROUP BY
     i.invoice_id;
 
 -- View for medication inventory
+-- This view tracks medication stock levels and categorizes them as 'Low Stock' 
+-- or 'In Stock' based on predefined minimum stock thresholds. 
+-- It also determines expiry status, marking medications as 'Expired' or 'Expiring Soon' 
+-- if nearing expiration. Useful for inventory management and restocking decisions.
 CREATE OR REPLACE VIEW view_medication_inventory AS
 SELECT 
     m.medication_id,
@@ -841,6 +917,8 @@ LEFT JOIN
     medication_categories mc ON m.category_id = mc.category_id;
 
 -- View for lab test results
+-- This view presents detailed information on lab test results, including patient details, test names, performed dates, and indicators of abnormal results. 
+-- It also includes doctors who ordered and verified the test, along with the technician who performed it. Results are sorted chronologically for easy review.
 CREATE OR REPLACE VIEW view_lab_test_results AS
 SELECT 
     lr.result_id,
@@ -891,6 +969,9 @@ ORDER BY
 -- =============================================
 
 -- Trigger to update invoice status based on payments
+-- This trigger ensures invoices reflect their correct payment status. 
+-- It updates the invoice status to "Paid" if the total payments equal 
+-- or exceed the payable amount, otherwise marking it as "Partially Paid."
 DELIMITER //
 DROP TRIGGER IF EXISTS after_payment_insert//
 CREATE TRIGGER after_payment_insert
@@ -926,6 +1007,9 @@ END//
 DELIMITER ;
 
 -- Trigger to update inventory after a transaction
+-- This trigger adjusts inventory stock levels based on different types of transactions. 
+-- It increases stock for purchases and returns while decreasing stock for sales or usage. 
+-- Additionally, it generates an automatic notification when stock drops below the minimum threshold.
 DELIMITER //
 DROP TRIGGER IF EXISTS after_inventory_transaction//
 CREATE TRIGGER after_inventory_transaction
@@ -967,6 +1051,9 @@ END//
 DELIMITER ;
 
 -- Trigger to create notification for new appointments
+-- This trigger automatically generates notifications for both doctors and patients 
+-- upon the creation of a new appointment. It helps ensure proper communication 
+-- by alerting relevant users of their upcoming appointments.
 DELIMITER //
 DROP TRIGGER IF EXISTS after_appointment_insert//
 CREATE TRIGGER after_appointment_insert
@@ -1002,6 +1089,9 @@ END//
 DELIMITER ;
 
 -- Trigger to log changes to patient data
+-- This trigger tracks updates made to patient records, storing previous 
+-- and new values in a structured JSON format. It logs who made the changes, 
+-- aiding in audit tracking and ensuring data integrity.
 DELIMITER //
 DROP TRIGGER IF EXISTS after_patient_update//
 CREATE TRIGGER after_patient_update
