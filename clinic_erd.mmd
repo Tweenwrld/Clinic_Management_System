@@ -1,0 +1,221 @@
+erDiagram
+    USERS {
+        int user_id PK
+        string username
+        string password_hash
+        string email
+        enum user_role
+        boolean is_active
+        datetime last_login
+        datetime created_at
+        datetime updated_at
+    }
+
+    PERSON {
+        int person_id PK
+        int user_id FK
+        string first_name
+        string last_name
+        date date_of_birth
+        enum gender
+        string phone_number
+        string address
+        string city
+        string state
+        string postal_code
+        string country
+        string emergency_contact_name
+        string emergency_contact_phone
+        datetime created_at
+        datetime updated_at
+    }
+
+    PATIENTS {
+        int patient_id PK
+        int person_id FK
+        enum blood_group
+        text allergies
+        text ongoing_medications
+        date registration_date
+        int insurance_provider_id FK
+        string insurance_policy_number
+        date insurance_expiry_date
+        datetime created_at
+        datetime updated_at
+    }
+
+    DOCTORS {
+        int doctor_id PK
+        int person_id FK
+        int department_id FK
+        string license_number
+        string qualification
+        int experience_years
+        decimal consultation_fee
+        datetime created_at
+        datetime updated_at
+    }
+
+    doctor_specialties {
+        int doctor_id FK
+        int specialty_id FK
+    }
+
+    SPECIALTIES {
+        int specialty_id PK
+        string specialty_name
+        string description
+        datetime created_at
+        datetime updated_at
+    }
+
+    NURSES {
+        int nurse_id PK
+        int person_id FK
+        int department_id FK
+        string license_number
+        boolean is_head_nurse
+        datetime created_at
+        datetime updated_at
+    }
+
+    STAFF {
+        int staff_id PK
+        int person_id FK
+        int department_id FK
+        string position
+        date hire_date
+        datetime created_at
+        datetime updated_at
+    }
+
+    DEPARTMENTS {
+        int department_id PK
+        string department_name
+        string description
+        string location
+        int head_doctor_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    INSURANCE_PROVIDERS {
+        int provider_id PK
+        string provider_name
+        string contact_phone
+        string contact_email
+        string address
+        datetime created_at
+        datetime updated_at
+    }
+
+    MEDICAL_HISTORY {
+        int history_id PK
+        int patient_id FK
+        string condition_name
+        date diagnosis_date
+        text treatment_summary
+        boolean is_chronic
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    APPOINTMENTS {
+        int appointment_id PK
+        int patient_id FK
+        int doctor_id FK
+        int department_id FK
+        date appointment_date
+        time start_time
+        time end_time
+        int status_id FK
+        text reason_for_visit
+        text notes
+        int created_by FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    DOCTOR_SCHEDULES {
+        int schedule_id PK
+        int doctor_id FK
+        enum day_of_week
+        time start_time
+        time end_time
+        boolean is_available
+        int max_appointments
+        time break_start
+        time break_end
+        datetime created_at
+        datetime updated_at
+    }
+
+    DOCTOR_TIME_OFF {
+        int time_off_id PK
+        int doctor_id FK
+        date start_date
+        date end_date
+        enum reason
+        text description
+        datetime created_at
+        datetime updated_at
+    }
+
+    APPOINTMENT_STATUS {
+        int status_id PK
+        string status_name
+        string description
+        datetime created_at
+        datetime updated_at
+    }
+
+    VITALS {
+        int vital_id PK
+        int patient_id FK
+        int appointment_id FK
+        int recorded_by FK
+        decimal temperature
+        string blood_pressure
+        int heart_rate
+        int respiratory_rate
+        decimal height
+        decimal weight
+        decimal oxygen_saturation
+        decimal blood_glucose
+        datetime recorded_at
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    USERS ||--o{ PERSON : "has"
+    PERSON ||--o| PATIENTS : "can be"
+    PERSON ||--o| DOCTORS : "can be"
+    PERSON ||--o| NURSES : "can be"
+    PERSON ||--o| STAFF : "can be"
+
+    DEPARTMENTS ||--o{ DOCTORS : "employs"
+    DEPARTMENTS ||--o{ NURSES : "employs"
+    DEPARTMENTS ||--o| STAFF : "employs"
+    DEPARTMENTS ||--|{ APPOINTMENTS : "operate in"
+
+    DOCTORS ||--o{ DOCTOR_SCHEDULES : "has schedule"
+    DOCTORS ||--o{ DOCTOR_TIME_OFF : "requests leave"
+    DOCTORS ||--o{ APPOINTMENTS : "conducts"
+    DOCTORS ||--o| doctor_specialties : "specializes in"
+    DOCTORS ||--o{ VITALS : "documents"
+
+    doctor_specialties }|--|| SPECIALTIES : "is of"
+    
+    INSURANCE_PROVIDERS ||--o{ PATIENTS : "insures"
+
+    PATIENTS ||--o{ MEDICAL_HISTORY : "has"
+    PATIENTS ||--o{ APPOINTMENTS : "schedules"
+    PATIENTS ||--o{ VITALS : "records"
+
+    DOCTOR_TIME_OFF ||--|| DOCTORS : "for"
+
+    APPOINTMENTS ||--o| APPOINTMENT_STATUS : "is in"
+    APPOINTMENTS ||--o{ VITALS : "records"
+    APPOINTMENTS ||--o{ MEDICAL_HISTORY : "influences"
