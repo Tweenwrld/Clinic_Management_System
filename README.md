@@ -94,6 +94,5 @@ This `README.md` serves as thorough documentation of:
 
 ## Conclusion
 
-If you see messages stating that rows were inserted without errors (like the successful insertion into the `person` table), it means the entire database schema was executed successfully, and the database now contains all the required tables, views, triggers, and sample data. The corrections ensured error-free re-runs and robust data integrity for your clinic management system.
+If you see messages stating that rows were inserted without errors (like the successful insertion into the `person` table), it means the entire database schema was executed successfully, and the database now contains all the required tables, views, triggers, and sample data. The corrections ensured error-free re-runs and robust data integrity for this clinic management system.
 
-Happy coding and database managing!
